@@ -34,7 +34,7 @@ public class MyConfig {
     public static String[] willMonsterNotHitBoat;
     public static boolean willMonsterNotHitBoatReverse;
     public static float hitBoatDamage;
-    public static Enum<BoatType> boatType;
+    public static String[] boatType;
     public static boolean matchRegex;
 
     public static boolean isWillMonsterMountBoat(String classname) {
@@ -93,10 +93,10 @@ public class MyConfig {
         willMonsterNotHitBoatReverse = COMMON.willMonsterNotHitBoatReverse.get();
         willMonsterNotHitBoat = extract(COMMON.willMonsterNotHitBoat.get());
         hitBoatDamage = COMMON.hitBoatDamage.get();
-        boatType = COMMON.boatType.get();
+        boatType = extract(COMMON.boatType.get());
     }
 
-    private static String[] extract(List<? extends String> value) {
+    private static String[] extract(List<String> value) {
         return value.toArray(new String[0]);
     }
 
@@ -104,13 +104,14 @@ public class MyConfig {
         List<String> willMonsterMountBoatList = Arrays.asList(".*");
         List<String> willMonsterNotLeaveBoatList = Arrays.asList("minecraft:zombie_villager");
         List<String> willMonsterNotHitBoatList = Arrays.asList("minecraft:wither", "minecraft:ender_dragon");
+        List<String> boatTypeList = Arrays.asList("boat", "minecart", "snowyspirit:sled", "car:car", "hpm:*");
 
-        public final ModConfigSpec.ConfigValue<List<? extends String>> willMonsterMountBoat;
-        public final ModConfigSpec.ConfigValue<List<? extends String>> willMonsterNotLeaveBoat;
+        public final ModConfigSpec.ConfigValue<List<String>> willMonsterMountBoat;
+        public final ModConfigSpec.ConfigValue<List<String>> willMonsterNotLeaveBoat;
         public final ModConfigSpec.ConfigValue<Boolean> willMonsterNotHitBoatReverse;
-        public final ModConfigSpec.ConfigValue<List<? extends String>> willMonsterNotHitBoat;
+        public final ModConfigSpec.ConfigValue<List<String>> willMonsterNotHitBoat;
         public final ModConfigSpec.ConfigValue<Float> hitBoatDamage;
-        public final ModConfigSpec.ConfigValue<Enum<BoatType>> boatType;
+        public final ModConfigSpec.ConfigValue<List<String>> boatType;
         public final ModConfigSpec.ConfigValue<Boolean> matchRegex;
 
         public Common(ModConfigSpec.Builder builder) {
@@ -138,9 +139,9 @@ public class MyConfig {
                     .define("hitBoatDamage", 6.0f);
 
             boatType = builder
-                    .comment("Which type of boat will trigger predicate. Can be BOAT, MINECART, BOAT_AND_MINECART, EVERY_VEHICLE.")
+                    .comment("Which type of boat will trigger predicate. Can be BOAT, MINECART, VEHICLE, ENTITY, *, or register id like snowyspirit:sled or hpm:*.")
                     .translation(Main.MODID + ".config.boatType")
-                    .define("boatType", BoatType.BOAT_AND_MINECART);
+                    .define("boatType", boatTypeList);
 
             matchRegex = builder
                     .comment("Use regex instead of contains Monsters registry name predicate.")
@@ -151,13 +152,6 @@ public class MyConfig {
         public static boolean isString(Object o) {
             return (o instanceof String);
         }
-    }
-
-    public enum BoatType {
-        BOAT,
-        MINECART,
-        BOAT_AND_MINECART,
-        EVERY_VEHICLE;
     }
 
 }

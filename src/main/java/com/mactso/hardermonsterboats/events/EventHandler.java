@@ -3,7 +3,6 @@ package com.mactso.hardermonsterboats.events;
 import com.mactso.hardermonsterboats.Main;
 import com.mactso.hardermonsterboats.config.MyConfig;
 
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,15 +19,66 @@ import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.GAME, modid = Main.MODID)
 public class EventHandler {
 
+    private static boolean isVehicle(Entity entity) {
+        if (MyConfig.boatType == null) {
+            return false;
+        }
+        for (String id : MyConfig.boatType) {
+            if ("boat".equalsIgnoreCase(id)) {
+                if (entity instanceof Boat) {
+                    return true;
+                }
+            } else if ("minecart".equalsIgnoreCase(id)) {
+                if (entity instanceof Minecart) {
+                    return true;
+                }
+            } else if ("vehicle".equalsIgnoreCase(id)) {
+                if (entity instanceof VehicleEntity) {
+                    return true;
+                }
+            } else if ("entity".equalsIgnoreCase(id)) {
+                if (entity instanceof LivingEntity) {
+                    return true;
+                }
+            } else if ("*".equalsIgnoreCase(id)) {
+                return true;
+            } else if (id.contains(":")) {
+                String encodeId = entity.getEncodeId();
+                if (encodeId != null) {
+                    String namespaceKey = id.substring(0, id.indexOf(":"));
+                    String namespaceVal = id.substring(id.indexOf(":") + 1);
+                    String entityKey;
+                    String entityVal;
+                    if (encodeId.contains(":")) {
+                        entityKey = encodeId.substring(0, encodeId.indexOf(":"));
+                        entityVal = encodeId.substring(encodeId.indexOf(":") + 1);
+                    } else {
+                        entityKey = null;
+                        entityVal = encodeId;
+                    }
+                    if ("*".equalsIgnoreCase(namespaceKey)) {
+                        if (namespaceVal.equalsIgnoreCase(entityVal)) {
+                            return true;
+                        }
+                    } else if ("*".equalsIgnoreCase(namespaceVal)) {
+                        if (namespaceKey.equalsIgnoreCase(entityKey)) {
+                            return true;
+                        }
+                    } else if (namespaceKey.equalsIgnoreCase(entityKey) && namespaceVal.equalsIgnoreCase(entityVal)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     @SubscribeEvent
     public static void onTarget(LivingDamageEvent.Pre event) {
         LivingEntity e = event.getEntity();
         if (event.getEntity() instanceof Monster) {
             Entity vehicle = e.getVehicle();
-            boolean isVehicle = (MyConfig.boatType.compareTo(MyConfig.BoatType.BOAT) == 0 && vehicle instanceof Boat)
-                    || (MyConfig.boatType.compareTo(MyConfig.BoatType.MINECART) == 0 && vehicle instanceof Minecart)
-                    || (MyConfig.boatType.compareTo(MyConfig.BoatType.BOAT_AND_MINECART) == 0 && (vehicle instanceof Boat || vehicle instanceof Minecart))
-                    || (MyConfig.boatType.compareTo(MyConfig.BoatType.EVERY_VEHICLE) == 0 && vehicle instanceof VehicleEntity);
+            boolean isVehicle = isVehicle(vehicle);
             if (isVehicle) {
                 String meRN = EntityType.getKey(e.getType()).toString();
                 if (!MyConfig.isWillMonsterNotLeaveBoat(meRN)) {
@@ -42,10 +92,7 @@ public class EventHandler {
     public static void onMountEvent(EntityMountEvent event) {
         if (event.getEntity() instanceof Monster me) {
             Entity vehicle = event.getEntityBeingMounted();
-            boolean isVehicle = (MyConfig.boatType.compareTo(MyConfig.BoatType.BOAT) == 0 && vehicle instanceof Boat)
-                    || (MyConfig.boatType.compareTo(MyConfig.BoatType.MINECART) == 0 && vehicle instanceof Minecart)
-                    || (MyConfig.boatType.compareTo(MyConfig.BoatType.BOAT_AND_MINECART) == 0 && (vehicle instanceof Boat || vehicle instanceof Minecart))
-                    || (MyConfig.boatType.compareTo(MyConfig.BoatType.EVERY_VEHICLE) == 0 && vehicle instanceof VehicleEntity);
+            boolean isVehicle = isVehicle(vehicle);
             if (isVehicle) {
                 String meRN = EntityType.getKey(me.getType()).toString();
                 boolean willMonsterNotHitBoat = MyConfig.isWillMonsterNotHitBoat(meRN);
