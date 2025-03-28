@@ -23,6 +23,9 @@ public class EventHandler {
         if (MyConfig.boatType == null) {
             return false;
         }
+        if (entity == null) {
+            return false;
+        }
         for (String id : MyConfig.boatType) {
             if ("boat".equalsIgnoreCase(id)) {
                 if (entity instanceof Boat) {
